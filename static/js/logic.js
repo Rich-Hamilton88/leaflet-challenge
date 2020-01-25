@@ -7,19 +7,31 @@ function markerSize(magnitude) {
 return magnitude * 3;
 };
 
-var earthquakeLayer = new L.LayerGroup()
+function magColor(mag) {
+    return mag > 8 ? "#800026":
+            mag > 7 ? "#bd0026":
+            mag > 6 ? "#e31a1c":
+            mag > 5 ? "#fc4e2a":
+            mag > 4 ? "#fd8d3c":
+            mag > 3 ? "#feb24c":
+            mag > 2 ? "#fed976":
+            mag > 1 ? "#ffeda0":
+                      "#ffffcc";
+  
+}
+var earthquakeLayer = new L.LayerGroup();
 
 // Perform a GET request to the query URL
 d3.json(queryUrl, function(data) {
     // Once we get Response, send the data.features object to the createFeatures function
     L.geoJSON(data.features, {
-        pointTolayer: function(earthquakeData, latlng) {
-            return L.circleMarker(latlng, {radius: markerSize(earthquakeData.properties.mag)});
+        pointTolayer: function(dataPoint, latlng) {
+            return L.circleMarker(latlng, {radius: markerSize(dataPoint.properties.mag)});
         },
 
-        style: function (earthquakeDatastyle) {
+        style: function (datastyle) {
             return{
-                fillColor: magColor(earthquakeDatastyle.properties.mag),
+                fillColor: magColor(datastyle.properties.mag),
                 fillOpacity: 0.7,
                 weight: 0.1,
                 color: 'black'
@@ -31,37 +43,30 @@ d3.json(queryUrl, function(data) {
         }
 
     }).addTo(earthquakeLayer);
-});// create a layer group for faultlines
+    createMap(earthquakeLayer);
+});
+
+// create a layer group for faultlines
 var plateLayer = new L.LayerGroup();
 
 // perform a GET request to the query URL: platesUrl
-d3.json(platesUrl, function (geoJson) {
+d3.json(platesUrl, function (dataplate) {
     // once we get a response, send the geoJson.features array of objects object to the L.geoJSON method
-    L.geoJSON(geoJson.features, {
-        style: function (geoJsonFeature) {
+    L.geoJSON(dataplate.features, {
+        style: function (datastyle) {
             return {
                 weight: 1,
                 color: 'brown'
             }
         },
     }).addTo(plateLayer);
-});
+})
 
 
 
     //Function to set circle color based on magnitude
 // create a fuction to change color by magnitude
-function magColor(mag) {
-    return mag > 8 ? "#800026":
-            mag > 7 ? "#bd0026":
-            mag > 6 ? "#e31a1c":
-            mag > 5 ? "#fc4e2a":
-            mag > 4 ? "#fd8d3c":
-            mag > 3 ? "#feb24c":
-            mag > 2 ? "#fed976":
-            mag > 1 ? "#ffeda0":
-                      "#ffffcc";
-};
+
 
 function createMap() {
     //Define streetmap, darkmap, and outdoorsmap layers
@@ -104,8 +109,8 @@ function createMap() {
     var myMap = L.map("map", {
         center: [37.09, -95.71],
         zoom: 5,
-        layers: [outdoorsmap, earthquakeLayer]
-    })
+        layers: [outdoorsmap, earthquakeLayer, plateLayer]
+    });
 
     //Create a layer control
     // Pass in our baseMaps and overlayMaps
@@ -130,6 +135,4 @@ function createMap() {
         return div;
     };  
     legend.addTo(myMap);
-};
-
-createMap();
+}
